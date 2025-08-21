@@ -83,9 +83,9 @@ fun CalculatorUI() {
                     /* 数字が押されたときの処理 */
                     input += button.symbol
                 }
-                CalcButton.Plus, CalcButton.Minus, CalcButton.Multiply, CalcButton.Divide -> {
+                is CalcButton.Operator -> {
                     /* 演算子が押されたときの処理 */
-                    if (input.isNotEmpty()) input += button.symbol
+                    if (canAppendOperator(input)) input += button.symbol
                 }
                 CalcButton.Clear -> {
                     /* クリア処理 */
@@ -171,4 +171,18 @@ fun CalculatorButtons(
             }
         }
     }
+}
+
+/*
+* 式に演算子を追加できるか確認する関数
+* 連続で演算子を追加できないようにする
+* 追加できるならtrueを返す
+* */
+fun canAppendOperator(input: String) : Boolean {
+    if (input.isEmpty()) {
+        return false
+    }
+
+    val lastChar = input.last()
+    return lastChar !in listOf('+', '-', '×', '÷')
 }
