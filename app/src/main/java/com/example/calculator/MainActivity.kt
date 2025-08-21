@@ -81,24 +81,70 @@ fun CalculatorUI() {
             when (button) {
                 is CalcButton.Number -> {
                     /* 数字が押されたときの処理 */
-                    input += button.symbol
+                    if (input.isNotEmpty() && input.last() == ')') {
+                        input += "×"
+                        input += button.symbol
+                    } else {
+                        input += button.symbol
+                    }
                 }
                 is CalcButton.Operator -> {
                     /* 演算子が押されたときの処理 */
-                    if (canAppendOperator(input)) input += button.symbol
+                    if (canAppendOperator(input)) {
+                        input += button.symbol
+                    }
                 }
                 CalcButton.Clear -> {
                     /* クリア処理 */
                     input = ""
                     result = ""
                 }
+                CalcButton.Delete -> {
+                    input = input.dropLast(1)
+                }
+                CalcButton.Parentheses -> {
+                    //input.count <- 条件に合う要素の数を数える
+                    val openCount = input.count { it == '(' }
+                    val closeCount = input.count { it == ')' }
+                    // 開く括弧を追加すべきか、閉じる括弧を追加すべきかを判定
+                    val isOpening = openCount == closeCount || input.lastOrNull() in listOf('+','-','×','÷','(')
+//                    if (canAppendParenthesis(input, isOpening)) {
+//                        input += if (isOpening) "(" else ")"
+//                    }
+                    if (isOpening) {
+                        if (canAppendParenthesis(input, true)) {
+                            // 直前が数字や ) の場合は × を補完
+                            if (input.isNotEmpty() && (input.last().isDigit() || input.last() == ')')) {
+                                input += "×("
+                            } else {
+                                input += "("
+                            }
+                        }
+                    } else {
+                        if (canAppendParenthesis(input, false)) {
+                            input += ")"
+                        }
+                    }
+                }
+                CalcButton.Percent -> {
+                    //"%"が押されたときの処理
+                    if (canAppendPercent(input)) {
+                        input += "%"
+                    }
+                }
+                CalcButton.Dot -> {
+                    //"."が押されたときの処理
+                    if (canAppendDot(input)) {
+                        input += "."
+                    }
+                }
                 CalcButton.Equals -> {
                     /* 計算実行処理 */
 
                 }
-                else -> {
-                    /* その他 */
-                }
+
+
+                else -> {}
             }
         }
     }
@@ -174,7 +220,6 @@ fun CalculatorButtons(
 }
 
 /*
-* 式に演算子を追加できるか確認する関数
 * 連続で演算子を追加できないようにする
 * 追加できるならtrueを返す
 * */
@@ -184,5 +229,52 @@ fun canAppendOperator(input: String) : Boolean {
     }
 
     val lastChar = input.last()
-    return lastChar !in listOf('+', '-', '×', '÷')
+    return lastChar !in listOf('+', '-', '×', '÷', '.', '(')
 }
+/*
+* 正しく"."を入力できるようにする
+* 入力できるならtrueを返す
+* */
+fun canAppendDot(input: String) : Boolean {
+    if (input.isEmpty()) {
+        return false
+    }
+
+    val lastChar = input.last()
+    if (lastChar in listOf('+', '-', '×', '÷', '(')) {
+        return false
+    }
+
+    //直近の数値ブロックにすでに"."がある場合は打てない
+    //123+456+6.78 -> lastNumber = 6.78
+    val lastNumber = input.takeLastWhile { it.isDigit() || it == '.' }
+    return !lastNumber.contains('.')
+}
+/*
+* 正しく"()"を入力できるようにする
+* 入力できるならtrueを返す
+* */
+fun canAppendParenthesis(input: String, isOpening: Boolean): Boolean {
+    return if (isOpening) {
+        // 開き括弧は空、または演算子の後ならOK
+        // 「(」を追加していいか？
+        input.isEmpty() || input.last().isDigit() || input.last() in listOf('+', '-', '×', '÷', '(')
+    } else {
+        // 閉じ括弧は空ではNG、最後が演算子ならNG
+        // 「)」を追加していいか？
+        if (input.isEmpty()) false
+        else input.count { it == '(' } > input.count { it == ')' } &&
+                input.last() !in listOf('+', '-', '×', '÷', '(')
+    }
+}
+/*
+* "正しく"%"を入力できるようにする
+* 入力できるならtrueを返す
+* */
+fun canAppendPercent(input: String): Boolean {
+    // 数字や閉じ括弧の直後ならOK
+    if (input.isEmpty()) return false
+    val lastChar = input.last()
+    return lastChar.isDigit() || lastChar == ')'
+}
+
