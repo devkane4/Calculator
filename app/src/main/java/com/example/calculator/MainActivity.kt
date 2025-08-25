@@ -15,25 +15,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.calculator.ui.theme.CalculatorTheme
-import com.example.calculator.CalcButton
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,7 +53,9 @@ fun CalculatorUI() {
     var result by remember { mutableStateOf("") }
 
     Column (
-        modifier = Modifier.fillMaxSize().padding(vertical = 30.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(vertical = 30.dp),
         verticalArrangement = Arrangement.Bottom
     ) {
         Text(
@@ -108,16 +105,14 @@ fun CalculatorUI() {
                     val closeCount = input.count { it == ')' }
                     // 開く括弧を追加すべきか、閉じる括弧を追加すべきかを判定
                     val isOpening = openCount == closeCount || input.lastOrNull() in listOf('+','-','×','÷','(')
-//                    if (canAppendParenthesis(input, isOpening)) {
-//                        input += if (isOpening) "(" else ")"
-//                    }
+
                     if (isOpening) {
                         if (canAppendParenthesis(input, true)) {
                             // 直前が数字や ) の場合は × を補完
-                            if (input.isNotEmpty() && (input.last().isDigit() || input.last() == ')')) {
-                                input += "×("
+                            input += if (input.isNotEmpty() && (input.last().isDigit() || input.last() == ')')) {
+                                "×("
                             } else {
-                                input += "("
+                                "("
                             }
                         }
                     } else {
@@ -140,7 +135,8 @@ fun CalculatorUI() {
                 }
                 CalcButton.Equals -> {
                     /* 計算実行処理 */
-
+                    val formatedInput = input.replace('×', '*').replace('÷', '/')
+                    result = Calculator.evaluate(formatedInput)
                 }
 
 
