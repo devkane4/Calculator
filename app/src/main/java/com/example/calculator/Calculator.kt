@@ -16,7 +16,7 @@ object Calculator {
             val token = tokens[i]
 
             when {
-                //正規表現で負の数と小数を認識 -> 数字ならそのまま追加
+                //正規表現で負の数と小数も認識 -> 数字ならそのまま追加
                 token.matches(Regex("""-?\d+(\.\d+)?""")) -> output.add(token)
                 token == "(" -> operators.addFirst(token)
                 token == ")" -> {

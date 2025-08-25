@@ -127,6 +127,10 @@ fun CalculatorUI() {
                         input += "%"
                     }
                 }
+                CalcButton.Sign -> {
+                    //"+/-"が押されたときの処理
+                    input = toggleSign(input)
+                }
                 CalcButton.Dot -> {
                     //"."が押されたときの処理
                     if (canAppendDot(input)) {
@@ -232,9 +236,7 @@ fun canAppendOperator(input: String) : Boolean {
 * 入力できるならtrueを返す
 * */
 fun canAppendDot(input: String) : Boolean {
-    if (input.isEmpty()) {
-        return false
-    }
+    if (input.isEmpty()) return false
 
     val lastChar = input.last()
     if (lastChar in listOf('+', '-', '×', '÷', '(')) {
@@ -264,7 +266,7 @@ fun canAppendParenthesis(input: String, isOpening: Boolean): Boolean {
     }
 }
 /*
-* "正しく"%"を入力できるようにする
+* 正しく"%"を入力できるようにする
 * 入力できるならtrueを返す
 * */
 fun canAppendPercent(input: String): Boolean {
@@ -273,4 +275,39 @@ fun canAppendPercent(input: String): Boolean {
     val lastChar = input.last()
     return lastChar.isDigit() || lastChar == ')'
 }
+/*
+* "+/-"ボタンが押されたとき
+* 正しく"+"や"-"記号の入替をできるようにする
+* */
+fun toggleSign(input: String): String {
+    // 入力が空なら "(-" を入れる
+    if (input.isEmpty()) {
+        return "(-"
+    }
 
+    // 入力の最後が「(-」で終わっている場合 → そこを削除
+    if (input.endsWith("(-")) {
+        return input.dropLast(2)
+    }
+
+    // "(-数字" の形なら → 数字だけ残す
+    val signedRegex = Regex("""\(-\d+(\.\d+)?$""")
+    val signedMatch = signedRegex.find(input)
+    if (signedMatch != null) {
+        return input.removeRange(signedMatch.range.first, signedMatch.range.first + 2)
+    }
+
+    // 普通の数字の形なら → "(-数字" に変換
+    val numberRegex = Regex("""\d+(\.\d+)?$""")
+    val numberMatch = numberRegex.find(input)
+    if (numberMatch != null) {
+        return input.replaceRange(numberMatch.range, "(-${numberMatch.value}")
+    }
+
+    // 最後が演算子のとき → "(-" を追加（ただし重複はしない）
+    if (input.last() in listOf('+', '-', '×', '÷', '(')) {
+        return "$input(-"
+    }
+
+    return input
+}
