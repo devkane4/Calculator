@@ -59,16 +59,23 @@ fun CalculatorUI() {
         verticalArrangement = Arrangement.Bottom
     ) {
         Text(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(65.dp),
             text = input,
-            fontSize = 32.sp,
+            fontSize = when {
+                input.length <= 16 -> 32.sp
+                else -> 24.sp
+            },
             textAlign = TextAlign.End
         )
 
         Text(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp),
             text = result,
-            fontSize = 24.sp,
+            fontSize = 30.sp,
             textAlign = TextAlign.End
         )
 
@@ -142,10 +149,8 @@ fun CalculatorUI() {
                     val formatedInput = input.replace('×', '*').replace('÷', '/')
                     result = Calculator.evaluate(formatedInput)
                 }
-
-
-                else -> {}
             }
+
         }
     }
 }
