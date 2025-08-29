@@ -116,7 +116,7 @@ fun CalculatorUI() {
                         if (lastNumber == "0" && button.symbol == "0") {
                             return@CalculatorButtons
                         } else if (lastNumber.length >= 15) {
-                            showToast("15以内で入力してください")
+                            showToast("15桁以内で入力してください")
                         } else if (input.isNotEmpty() && input.last() == ')') {
                             input += "×"
                             input += button.symbol
