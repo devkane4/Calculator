@@ -95,7 +95,7 @@ fun CalculatorUI() {
             when (button) {
                 is CalcButton.Number -> {
                     /* 数字が押されたときの処理 */
-                    val lastNumber = input.split("+", "-", "×", "÷", "(").last()
+                    val lastNumber = input.split("+", "-", "×", "÷", "(", ")").last()
 
                     if (lastNumber.contains(".")) {
                         val parts = lastNumber.split(".")
@@ -113,9 +113,10 @@ fun CalculatorUI() {
 
                         input += button.symbol
                     } else {
-                        val lastNumber = input.split("+", "-", "×", "÷", "(", ")").last()
-                        if (lastNumber.length >= 15) {
-                            showToast("15以内で入力してください")
+                        if (lastNumber == "0" && button.symbol == "0") {
+                            return@CalculatorButtons
+                        } else if (lastNumber.length >= 15) {
+                            showToast("15桁以内で入力してください")
                         } else if (input.isNotEmpty() && input.last() == ')') {
                             input += "×"
                             input += button.symbol
