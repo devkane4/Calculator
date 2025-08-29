@@ -1,6 +1,7 @@
 package com.example.calculator
 
 import android.os.Bundle
+import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,17 +21,21 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.calculator.ui.theme.CalculatorTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,7 +122,7 @@ fun CalculatorUI() {
                             return@CalculatorButtons
                         } else if (lastNumber.length >= 15) {
                             showToast("15桁以内で入力してください")
-                        } else if (input.isNotEmpty() && input.last() == ')') {
+                        } else if (input.isNotEmpty() && (input.last() == ')' || input.last() == '%')) {
                             input += "×"
                             input += button.symbol
                         } else {
@@ -196,30 +201,16 @@ fun CalculatorUI() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CalculatorButtons(
     onButtonClick: (CalcButton) -> Unit
 ) {
     val buttons = listOf(
         listOf(CalcButton.Clear, CalcButton.Parentheses, CalcButton.Percent, CalcButton.Divide),
-        listOf(
-            CalcButton.Number("7"),
-            CalcButton.Number("8"),
-            CalcButton.Number("9"),
-            CalcButton.Multiply
-        ),
-        listOf(
-            CalcButton.Number("4"),
-            CalcButton.Number("5"),
-            CalcButton.Number("6"),
-            CalcButton.Minus
-        ),
-        listOf(
-            CalcButton.Number("1"),
-            CalcButton.Number("2"),
-            CalcButton.Number("3"),
-            CalcButton.Plus
-        ),
+        listOf(CalcButton.Number("7"), CalcButton.Number("8"), CalcButton.Number("9"), CalcButton.Multiply),
+        listOf(CalcButton.Number("4"), CalcButton.Number("5"), CalcButton.Number("6"), CalcButton.Minus),
+        listOf(CalcButton.Number("1"), CalcButton.Number("2"), CalcButton.Number("3"), CalcButton.Plus),
         listOf(CalcButton.Sign, CalcButton.Number("0"), CalcButton.Dot, CalcButton.Equals)
     )
 
@@ -231,10 +222,31 @@ fun CalculatorButtons(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
+            var isPressed by remember { mutableStateOf(false) }
+
+            // isPressedに変化があった時だけ起動する
+            LaunchedEffect(isPressed) {
+                if (isPressed) {
+                    while (isPressed) {
+                        onButtonClick(CalcButton.Delete)
+                        delay(200) // 200msごとに削除
+                    }
+                }
+            }
+
             OutlinedButton(
                 onClick = { onButtonClick(CalcButton.Delete) },
                 shape = CircleShape,
-                border = null
+                border = null,
+                //pointerInteropFilterを扱うと低レベルのMotionEventを扱える
+                modifier = Modifier.pointerInteropFilter { event ->
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> isPressed = true   // 押されたらループ開始
+                        MotionEvent.ACTION_UP,
+                        MotionEvent.ACTION_CANCEL -> isPressed = false // 離したらループ停止
+                    }
+                    true
+                }
             ) {
                 Text(
                     text = CalcButton.Delete.symbol,
